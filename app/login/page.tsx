@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth, isFirebaseConfigured } from "@/lib/firebase/client";
@@ -16,11 +16,14 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // If Firebase isn't configured, there's no auth to check — send to dashboard.
-  if (!isFirebaseConfigured) {
-    router.replace("/dashboard");
-    return null;
-  }
+  // If Firebase isn't configured, redirect to dashboard (no auth needed).
+  useEffect(() => {
+    if (!isFirebaseConfigured) {
+      router.replace("/dashboard");
+    }
+  }, [router]);
+
+  if (!isFirebaseConfigured) return null;
 
   async function handleSubmit(ev: React.FormEvent<HTMLFormElement>) {
     ev.preventDefault();
