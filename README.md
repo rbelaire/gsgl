@@ -1,15 +1,14 @@
-# Gulf South Golf Lab MVP
+# Gulf South Golf Lab Website Foundation
 
-Production-ready MVP golf fitting application with deterministic recommendation logic.
+Premium, responsive front-end foundation for Gulf South Golf Lab built with Next.js App Router, TypeScript, and Tailwind CSS.
 
 ## Stack
 
 - Next.js App Router + TypeScript + Tailwind CSS
-- Firebase Auth + Firestore
-- Rules engine with weighted scoring in `lib/fitting`
-- Recharts visualization
+- Component-driven UI architecture
+- Static export configuration for GitHub Pages deployment
 
-## Setup
+## Local development
 
 1. Install dependencies:
 
@@ -17,43 +16,22 @@ Production-ready MVP golf fitting application with deterministic recommendation 
 npm install
 ```
 
-2. Create `.env.local`:
-
-```bash
-NEXT_PUBLIC_FIREBASE_API_KEY=
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
-NEXT_PUBLIC_FIREBASE_APP_ID=
-
-FIREBASE_PROJECT_ID=
-FIREBASE_CLIENT_EMAIL=
-FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\\n...\\n-----END PRIVATE KEY-----\\n"
-```
-
-3. Start dev server:
+2. Start dev server:
 
 ```bash
 npm run dev
 ```
 
-## API
+## Deploying to GitHub Pages
 
-- `POST /api/session/create`
-- `POST /api/session/recommend`
-- `GET /api/session/:id`
+This repo is configured for project Pages at:
 
-## Deterministic fitting logic
+- `https://rbelaire.github.io/gsgl/`
 
-- `lib/fitting/rules.ts`: category-specific deterministic fit rules
-- `lib/fitting/scoring.ts`: weighted score model
-- `lib/fitting/engine.ts`: orchestrates top-3 recommendations and build specs
+Key deployment settings:
 
-Scoring weights:
+- `next.config.ts` uses `output: "export"`
+- `basePath` and `assetPrefix` are set to `/gsgl` in production
+- `.github/workflows/deploy-pages.yml` builds and deploys the `out/` directory
 
-- Distance: 25%
-- Dispersion: 30%
-- Launch/Spin Optimization: 25%
-- Player Preference: 10%
-- Forgiveness: 10%
+After merging to `main`, GitHub Actions should publish the latest build to Pages.
