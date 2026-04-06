@@ -4,9 +4,6 @@ const isProd = process.env.NODE_ENV === "production";
 const repoName = "gsgl";
 
 const nextConfig: NextConfig = {
-  experimental: {
-    typedRoutes: true,
-  },
   output: "export",
   images: {
     unoptimized: true,
