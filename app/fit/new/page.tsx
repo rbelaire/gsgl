@@ -6,6 +6,7 @@ import { Stepper } from "@/components/fit/Stepper";
 import { FormSectionWrapper } from "@/components/fit/FormSectionWrapper";
 import { Button } from "@/components/ui/Button";
 import { runFittingEngine } from "@/lib/fitting/engine";
+import { fetchEquipmentCatalog } from "@/lib/firebase/equipment";
 import { saveSession } from "@/lib/session-history";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import {
@@ -99,7 +100,7 @@ function NewFitPage() {
     setStep((prev) => Math.max(prev - 1, 0));
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
     const input = {
       profile: { handicap: Number(handicap), heightIn: Number(heightIn), wristToFloorIn: Number(wristToFloorIn), ageRange, tempo, missTendency, trajectory },
       equipment: { driverModel, driverLoft, driverShaft, ironModel, ironShaft, ballModel },
@@ -115,7 +116,8 @@ function NewFitPage() {
       goals: { moreDistance, lessSpin, higherLaunch, tighterDispersion, softerFeel },
     };
 
-    const result = runFittingEngine(input);
+    const catalog = await fetchEquipmentCatalog();
+    const result = runFittingEngine(input, catalog);
     sessionStorage.setItem("gsgl_fit_result", JSON.stringify(result));
 
     const goalLabels = [

@@ -1,7 +1,17 @@
 import { balls, drivers, irons, shafts } from "../data/seed";
+import type { EquipmentOption } from "../data/seed";
 import { evaluateOption } from "./rules";
 import { scoreToConfidence, weightedScore } from "./scoring";
 import { FitRecommendationResult, FitSessionInput, ScoredRecommendation } from "./types";
+
+export interface EquipmentCatalog {
+  balls: EquipmentOption[];
+  drivers: EquipmentOption[];
+  irons: EquipmentOption[];
+  shafts: EquipmentOption[];
+}
+
+const SEED_CATALOG: EquipmentCatalog = { balls, drivers, irons, shafts };
 
 function buildSpecs(input: FitSessionInput) {
   const { heightIn, wristToFloorIn } = input.profile;
@@ -27,8 +37,13 @@ function expectedGain(category: string, score: number): string {
   return `Incremental gains expected in ${category}; prioritize validation session.`;
 }
 
-function scoreCategory(input: FitSessionInput, options: typeof balls): ScoredRecommendation[] {
-  const hasLaunchData = Object.values(input.launchData).some((v) => v !== undefined && v !== null && v !== "");
+function scoreCategory(
+  input: FitSessionInput,
+  options: EquipmentOption[],
+): ScoredRecommendation[] {
+  const hasLaunchData = Object.values(input.launchData).some(
+    (v) => v !== undefined && v !== null && v !== "",
+  );
 
   return options
     .map((option) => {
@@ -55,15 +70,30 @@ function scoreCategory(input: FitSessionInput, options: typeof balls): ScoredRec
     .slice(0, 3);
 }
 
-export function runFittingEngine(input: FitSessionInput): FitRecommendationResult {
-  const ball = scoreCategory(input, balls);
-  const driver = scoreCategory(input, drivers);
-  const iron = scoreCategory(input, irons);
-  const shaft = scoreCategory(input, shafts);
+/**
+ * Run the fitting engine against a player input.
+ *
+ * Pass a `catalog` to use equipment fetched from Firestore (or any other
+ * source). Omit it to fall back to the local seed data — useful in tests
+ * and when Firebase is not configured.
+ */
+export function runFittingEngine(
+  input: FitSessionInput,
+  catalog: EquipmentCatalog = SEED_CATALOG,
+): FitRecommendationResult {
+  const ball = scoreCategory(input, catalog.balls);
+  const driver = scoreCategory(input, catalog.drivers);
+  const iron = scoreCategory(input, catalog.irons);
+  const shaft = scoreCategory(input, catalog.shafts);
 
-  const hasLaunchData = Object.values(input.launchData).some((v) => v !== undefined && v !== null && v !== "");
+  const hasLaunchData = Object.values(input.launchData).some(
+    (v) => v !== undefined && v !== null && v !== "",
+  );
   const overall = Math.round(
-    [ball[0]?.score ?? 0, driver[0]?.score ?? 0, iron[0]?.score ?? 0, shaft[0]?.score ?? 0].reduce((a, b) => a + b, 0) / 4,
+    [ball[0]?.score ?? 0, driver[0]?.score ?? 0, iron[0]?.score ?? 0, shaft[0]?.score ?? 0].reduce(
+      (a, b) => a + b,
+      0,
+    ) / 4,
   );
 
   return {
