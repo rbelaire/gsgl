@@ -12,15 +12,12 @@
     "firebase": "^11.10.0",
     "firebase-admin": "^12.7.0",
     "next": "15.3.1",
-    "papaparse": "^5.5.2",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "recharts": "^2.15.4",
     "zod": "^3.24.4"
   },
   "devDependencies": {
     "@types/node": "^22.15.3",
-    "@types/papaparse": "^5.3.16",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
     "eslint": "^9.25.0",
