@@ -6,6 +6,8 @@ import { Stepper } from "@/components/fit/Stepper";
 import { FormSectionWrapper } from "@/components/fit/FormSectionWrapper";
 import { Button } from "@/components/ui/Button";
 import { runFittingEngine } from "@/lib/fitting/engine";
+import { saveSession } from "@/lib/session-history";
+import { AuthGuard } from "@/components/auth/AuthGuard";
 import {
   profileSchema,
   equipmentSchema,
@@ -29,7 +31,7 @@ function parseErrors(err: unknown): FieldErrors {
   return {};
 }
 
-export default function NewFitPage() {
+function NewFitPage() {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -115,6 +117,16 @@ export default function NewFitPage() {
 
     const result = runFittingEngine(input);
     sessionStorage.setItem("gsgl_fit_result", JSON.stringify(result));
+
+    const goalLabels = [
+      moreDistance && "More distance",
+      lessSpin && "Less spin",
+      higherLaunch && "Higher launch",
+      tighterDispersion && "Tighter dispersion",
+      softerFeel && "Softer feel",
+    ].filter(Boolean) as string[];
+    saveSession(result, goalLabels);
+
     router.push("/fit/results");
   }
 
@@ -313,5 +325,13 @@ export default function NewFitPage() {
         )}
       </div>
     </main>
+  );
+}
+
+export default function NewFitPageGuarded() {
+  return (
+    <AuthGuard>
+      <NewFitPage />
+    </AuthGuard>
   );
 }

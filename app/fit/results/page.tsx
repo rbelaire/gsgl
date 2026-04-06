@@ -2,15 +2,22 @@
 
 import { useEffect, useState } from "react";
 import { RecommendationCard } from "@/components/results/RecommendationCard";
+import { ScoreBreakdownChart } from "@/components/results/ScoreBreakdownChart";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Button } from "@/components/ui/Button";
 import { resultPanels } from "@/lib/mock-data/site";
 import type { FitRecommendationResult } from "@/lib/fitting/types";
 
-const CONFIDENCE_COLORS: Record<string, string> = {
+const CONFIDENCE_BADGE: Record<string, string> = {
   High: "text-emerald-700 bg-emerald-50 border-emerald-200",
   Medium: "text-amber-700 bg-amber-50 border-amber-200",
   Low: "text-slate-600 bg-slate-50 border-slate-200",
+};
+
+const CONFIDENCE_MSG: Record<string, string> = {
+  High: "Strong launch data confidence. Recommendations are well-anchored in measurable inputs.",
+  Medium: "Moderate confidence. Adding more launch data will sharpen results.",
+  Low: "Low confidence. Provide launch monitor data for higher-precision recommendations.",
 };
 
 export default function FitResultsPage() {
@@ -27,65 +34,101 @@ export default function FitResultsPage() {
     }
   }, []);
 
-  // Live engine result view
+  // ── Live engine result view ────────────────────────────────────────────
   if (result) {
-    const top = (arr: FitRecommendationResult["ball"]) => arr[0];
-    const ball = top(result.ball);
-    const driver = top(result.driver);
-    const iron = top(result.irons);
-    const shaft = top(result.shafts);
+    const picks = [
+      { title: "Recommended Ball", rec: result.ball[0] },
+      { title: "Recommended Driver", rec: result.driver[0] },
+      { title: "Recommended Irons", rec: result.irons[0] },
+      { title: "Recommended Shaft", rec: result.shafts[0] },
+    ].filter((p): p is { title: string; rec: NonNullable<typeof p.rec> } =>
+      p.rec !== undefined,
+    );
+
     const { buildSpecs, confidence } = result;
     const overallPct = Math.round(
-      [ball, driver, iron, shaft].filter(Boolean).reduce((s, r) => s + r!.score, 0) /
-        [ball, driver, iron, shaft].filter(Boolean).length,
+      picks.reduce((s, p) => s + p.rec.score, 0) / picks.length,
     );
 
     return (
       <main className="mx-auto max-w-6xl px-4 py-16 sm:py-20">
-        <SectionHeader
-          eyebrow="Results"
-          title="Recommendation Summary"
-          description="Personalized recommendations generated from your profile and launch data."
-        />
-
-        <div className="mt-10 grid gap-5 lg:grid-cols-2 xl:grid-cols-4">
-          {[
-            { title: "Recommended Ball", rec: ball },
-            { title: "Recommended Driver", rec: driver },
-            { title: "Recommended Irons", rec: iron },
-            { title: "Recommended Shaft", rec: shaft },
-          ].map(({ title, rec }) =>
-            rec ? (
-              <RecommendationCard
-                key={title}
-                title={title}
-                value={rec.name}
-                summary={rec.expectedImprovement}
-              />
-            ) : null,
-          )}
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <SectionHeader
+            eyebrow="Results"
+            title="Recommendation Summary"
+            description="Personalized recommendations generated from your profile and launch data."
+          />
+          <button
+            onClick={() => window.print()}
+            className="print:hidden shrink-0 inline-flex items-center gap-2 rounded-md border border-gsgl-navy/20 bg-white px-4 py-2.5 text-sm font-semibold text-gsgl-navy transition-colors hover:bg-gsgl-sand"
+          >
+            Print / Export PDF
+          </button>
         </div>
 
+        {/* Top picks */}
+        <div className="mt-10 grid gap-5 lg:grid-cols-2 xl:grid-cols-4">
+          {picks.map(({ title, rec }) => (
+            <RecommendationCard
+              key={title}
+              title={title}
+              value={rec.name}
+              summary={rec.expectedImprovement}
+            />
+          ))}
+        </div>
+
+        {/* Score breakdown charts */}
+        <section className="mt-8">
+          <h2 className="text-lg font-semibold text-gsgl-navy">Score breakdown by dimension</h2>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {picks.map(({ title, rec }) => (
+              <div
+                key={title}
+                className="rounded-xl border border-gsgl-navy/10 bg-white p-4 shadow-sm"
+              >
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gsgl-slate">
+                  {title.replace("Recommended ", "")}
+                </p>
+                <p className="mt-1 text-sm font-medium text-gsgl-navy">{rec.name}</p>
+                <ScoreBreakdownChart components={rec.components} />
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Build specs */}
         <section className="mt-8 grid gap-4 sm:grid-cols-3">
           {[
             { label: "Length adjustment", value: buildSpecs.lengthAdjustment },
             { label: "Lie adjustment", value: buildSpecs.lieAdjustment },
             { label: "Grip size", value: buildSpecs.gripSize },
           ].map(({ label, value }) => (
-            <div key={label} className="rounded-xl border border-gsgl-navy/10 bg-white p-5 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gsgl-slate">{label}</p>
+            <div
+              key={label}
+              className="rounded-xl border border-gsgl-navy/10 bg-white p-5 shadow-sm"
+            >
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gsgl-slate">
+                {label}
+              </p>
               <p className="mt-2 text-lg font-semibold text-gsgl-navy">{value}</p>
             </div>
           ))}
         </section>
 
+        {/* Rationale + confidence */}
         <section className="mt-8 grid gap-6 lg:grid-cols-[1.3fr_1fr]">
           <article className="rounded-xl border border-gsgl-navy/10 bg-white p-6 shadow-sm">
             <h2 className="text-xl font-semibold text-gsgl-navy">Fit rationale</h2>
             <ul className="mt-4 space-y-2">
-              {[ball, driver, iron, shaft].flatMap((r) => r?.reasons ?? []).slice(0, 6).map((reason, i) => (
-                <li key={i} className="text-sm leading-6 text-gsgl-gray">• {reason}</li>
-              ))}
+              {picks
+                .flatMap((p) => p.rec.reasons)
+                .slice(0, 6)
+                .map((r, i) => (
+                  <li key={i} className="text-sm leading-6 text-gsgl-gray">
+                    • {r}
+                  </li>
+                ))}
             </ul>
           </article>
 
@@ -93,20 +136,17 @@ export default function FitResultsPage() {
             <h2 className="text-xl font-semibold text-gsgl-navy">Confidence Level</h2>
             <div className="mt-3 flex items-end gap-3">
               <p className="text-4xl font-bold text-gsgl-navy">{overallPct}%</p>
-              <span className={`mb-1 rounded-md border px-2 py-0.5 text-xs font-semibold ${CONFIDENCE_COLORS[confidence]}`}>
+              <span
+                className={`mb-1 rounded-md border px-2 py-0.5 text-xs font-semibold ${CONFIDENCE_BADGE[confidence]}`}
+              >
                 {confidence}
               </span>
             </div>
-            <p className="mt-3 text-sm text-gsgl-gray">
-              {confidence === "High"
-                ? "Strong launch data confidence. Recommendations are well-anchored in measurable inputs."
-                : confidence === "Medium"
-                  ? "Moderate confidence. Adding more launch data will sharpen results."
-                  : "Low confidence. Provide launch monitor data for higher-precision recommendations."}
-            </p>
+            <p className="mt-3 text-sm text-gsgl-gray">{CONFIDENCE_MSG[confidence]}</p>
           </article>
         </section>
 
+        {/* Next steps */}
         <section className="mt-8 rounded-xl border border-gsgl-navy/10 bg-white p-6 shadow-sm">
           <h2 className="text-xl font-semibold text-gsgl-navy">Next Steps</h2>
           <ul className="mt-4 space-y-2 text-sm text-gsgl-gray">
@@ -116,14 +156,19 @@ export default function FitResultsPage() {
           </ul>
         </section>
 
-        <div className="mt-8 flex gap-3">
-          <Button href="/fit/new" variant="secondary">Start New Fit</Button>
+        <div className="print:hidden mt-8 flex gap-3">
+          <Button href="/fit/new" variant="secondary">
+            Start New Fit
+          </Button>
+          <Button href="/dashboard" variant="ghost">
+            Dashboard
+          </Button>
         </div>
       </main>
     );
   }
 
-  // Fallback: sample/mock layout
+  // ── Fallback: sample/mock layout ──────────────────────────────────────
   return (
     <main className="mx-auto max-w-6xl px-4 py-16 sm:py-20">
       <SectionHeader
@@ -144,15 +189,14 @@ export default function FitResultsPage() {
           <p className="mt-4 text-sm leading-7 text-gsgl-gray">
             Launch and dispersion inputs indicate the player benefits from reducing driver spin while preserving iron descent angle. The selected setup prioritizes tighter directional control and predictable carry gaps.
           </p>
-          <p className="mt-4 text-sm leading-7 text-gsgl-gray">
-            Confidence weighting is strongest in driver and ball categories due to complete speed, spin, and strike pattern data.
-          </p>
         </article>
 
         <article className="rounded-xl border border-gsgl-gold/30 bg-gsgl-sand p-6 shadow-sm">
           <h2 className="text-xl font-semibold text-gsgl-navy">Confidence Level</h2>
           <p className="mt-3 text-4xl font-bold text-gsgl-navy">84%</p>
-          <p className="mt-3 text-sm text-gsgl-gray">Sample values. Run a full fitting session to see live confidence scores.</p>
+          <p className="mt-3 text-sm text-gsgl-gray">
+            Sample values. Run a full fitting session to see live confidence scores.
+          </p>
         </article>
       </section>
 
