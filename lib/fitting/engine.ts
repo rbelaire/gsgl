@@ -1,8 +1,20 @@
 import { balls, drivers, irons, shafts } from "../data/seed";
 import type { EquipmentOption } from "../data/seed";
 import { evaluateOption } from "./rules";
-import { scoreToConfidence, weightedScore } from "./scoring";
-import { FitRecommendationResult, FitSessionInput, ScoredRecommendation } from "./types";
+import {
+  buildConfidenceSummary,
+  computeDataConfidence,
+  computeMatchStrength,
+  matchStrengthToLegacyConfidence,
+  minMaxNormalize,
+  weightedScore,
+} from "./scoring";
+import { validateBuildCoherence } from "./coherence";
+import type {
+  FitRecommendationResult,
+  FitSessionInput,
+  ScoredRecommendation,
+} from "./types";
 
 export interface EquipmentCatalog {
   balls: EquipmentOption[];
@@ -12,6 +24,8 @@ export interface EquipmentCatalog {
 }
 
 const SEED_CATALOG: EquipmentCatalog = { balls, drivers, irons, shafts };
+
+// ── Build specs ───────────────────────────────────────────────────────────────
 
 function buildSpecs(input: FitSessionInput) {
   const { heightIn, wristToFloorIn } = input.profile;
@@ -31,24 +45,43 @@ function buildSpecs(input: FitSessionInput) {
   return { lengthAdjustment, lieAdjustment, gripSize };
 }
 
-function expectedGain(category: string, score: number): string {
-  if (score >= 80) return `Strong projected gains in ${category} optimization.`;
-  if (score >= 65) return `Moderate projected gains in ${category} with testing validation.`;
+// ── Expected improvement sentence ────────────────────────────────────────────
+
+function expectedGain(category: string, normalizedScore: number): string {
+  if (normalizedScore >= 70)
+    return `Strong projected gains in ${category} optimization.`;
+  if (normalizedScore >= 40)
+    return `Moderate projected gains in ${category} with testing validation.`;
   return `Incremental gains expected in ${category}; prioritize validation session.`;
 }
+
+// ── Score a single category ───────────────────────────────────────────────────
+//
+// 1. Compute raw weighted scores (no per-dimension cap).
+// 2. Min-max normalize across the candidate set → 0–100.
+// 3. Return top 3 sorted by normalized score.
 
 function scoreCategory(
   input: FitSessionInput,
   options: EquipmentOption[],
 ): ScoredRecommendation[] {
-  const hasLaunchData = Object.values(input.launchData).some(
-    (v) => v !== undefined && v !== null && v !== "",
+  if (options.length === 0) return [];
+
+  const evaluations = options.map((option) => ({
+    option,
+    evaluation: evaluateOption(input, option),
+  }));
+
+  const rawScores = evaluations.map(({ option, evaluation }) =>
+    weightedScore(evaluation, option.category),
   );
 
-  return options
-    .map((option) => {
-      const evaluation = evaluateOption(input, option);
-      const score = weightedScore(evaluation);
+  const normalizedScores = minMaxNormalize(rawScores);
+
+  const recommendations: ScoredRecommendation[] = evaluations.map(
+    ({ option, evaluation }, i) => {
+      const score = normalizedScores[i];
+      const matchStr = computeMatchStrength(score);
       return {
         id: option.id,
         category: option.category,
@@ -56,19 +89,22 @@ function scoreCategory(
         score,
         reasons: evaluation.reasons,
         expectedImprovement: expectedGain(option.category, score),
-        confidence: scoreToConfidence(score, hasLaunchData),
+        confidence: matchStrengthToLegacyConfidence(matchStr),
         components: {
           distance: evaluation.distance,
           dispersion: evaluation.dispersion,
           launchSpin: evaluation.launchSpin,
-          preference: evaluation.preference,
+          feel: evaluation.feel,
           forgiveness: evaluation.forgiveness,
         },
       } satisfies ScoredRecommendation;
-    })
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 3);
+    },
+  );
+
+  return recommendations.sort((a, b) => b.score - a.score).slice(0, 3);
 }
+
+// ── Main engine ───────────────────────────────────────────────────────────────
 
 /**
  * Run the fitting engine against a player input.
@@ -81,27 +117,64 @@ export function runFittingEngine(
   input: FitSessionInput,
   catalog: EquipmentCatalog = SEED_CATALOG,
 ): FitRecommendationResult {
-  const ball = scoreCategory(input, catalog.balls);
-  const driver = scoreCategory(input, catalog.drivers);
-  const iron = scoreCategory(input, catalog.irons);
-  const shaft = scoreCategory(input, catalog.shafts);
+  const ballRecs = scoreCategory(input, catalog.balls);
+  const driverRecs = scoreCategory(input, catalog.drivers);
+  const ironRecs = scoreCategory(input, catalog.irons);
+  const shaftRecs = scoreCategory(input, catalog.shafts);
 
-  const hasLaunchData = Object.values(input.launchData).some(
-    (v) => v !== undefined && v !== null && v !== "",
+  // Build coherence pass — may swap #2 picks to resolve known bad combos.
+  const coherentBuild = validateBuildCoherence({
+    driver: driverRecs,
+    shaft: shaftRecs,
+    ball: ballRecs,
+    iron: ironRecs,
+  });
+
+  // Merge coherence swaps back into the ranked lists (keep ranking order
+  // intact, just replace the #1 slot if it was swapped).
+  function mergeCoherence(
+    recs: ScoredRecommendation[],
+    coherentPick: ScoredRecommendation,
+  ): ScoredRecommendation[] {
+    if (recs.length === 0) return recs;
+    if (recs[0].id === coherentPick.id) return recs; // no swap
+    const rest = recs.filter((r) => r.id !== coherentPick.id).slice(0, 2);
+    return [coherentPick, ...rest];
+  }
+
+  const finalDriver = mergeCoherence(driverRecs, coherentBuild.driver);
+  const finalShaft = mergeCoherence(shaftRecs, coherentBuild.shaft);
+  const finalBall = mergeCoherence(ballRecs, coherentBuild.ball);
+  const finalIron = mergeCoherence(ironRecs, coherentBuild.iron);
+
+  // Confidence signals
+  const dataConfidence = computeDataConfidence(
+    input.launchData as Record<string, unknown>,
   );
-  const overall = Math.round(
-    [ball[0]?.score ?? 0, driver[0]?.score ?? 0, iron[0]?.score ?? 0, shaft[0]?.score ?? 0].reduce(
-      (a, b) => a + b,
-      0,
-    ) / 4,
+
+  const topScores = [
+    finalBall[0]?.score ?? 0,
+    finalDriver[0]?.score ?? 0,
+    finalIron[0]?.score ?? 0,
+    finalShaft[0]?.score ?? 0,
+  ];
+  const overallTopScore = Math.round(
+    topScores.reduce((a, b) => a + b, 0) / topScores.length,
   );
+
+  const matchStrength = computeMatchStrength(overallTopScore);
+  const legacyConfidence = matchStrengthToLegacyConfidence(matchStrength);
+  const confidenceSummary = buildConfidenceSummary(dataConfidence, matchStrength);
 
   return {
-    ball,
-    driver,
-    irons: iron,
-    shafts: shaft,
-    confidence: scoreToConfidence(overall, hasLaunchData),
+    ball: finalBall,
+    driver: finalDriver,
+    irons: finalIron,
+    shafts: finalShaft,
+    confidence: legacyConfidence,
+    dataConfidence,
+    matchStrength,
+    confidenceSummary,
     buildSpecs: buildSpecs(input),
   };
 }

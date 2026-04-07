@@ -48,21 +48,40 @@ export interface FitSessionInput {
 
 export type RecommendationCategory = "ball" | "driver" | "irons" | "shaft";
 
+/**
+ * How complete the player's input is.
+ * Replaces the old single-label confidence for the data-availability axis.
+ */
+export type DataConfidence = "none" | "profile_only" | "profile_and_launch";
+
+/**
+ * How well the top pick scored relative to the candidate set and a theoretical
+ * ideal. Replaces the old single-label confidence for the match-quality axis.
+ */
+export type MatchStrength = "strong" | "moderate" | "weak";
+
 export interface ScoredRecommendation {
   id: string;
   name: string;
   category: RecommendationCategory;
+  /** Normalized 0–100 final score (min-max across the category). */
   score: number;
   reasons: string[];
   expectedImprovement: string;
+  /**
+   * @deprecated Use dataConfidence + matchStrength on FitRecommendationResult.
+   * Kept for session-history backward compatibility; derived from matchStrength.
+   */
   confidence: "High" | "Medium" | "Low";
   components: {
     distance: number;
     dispersion: number;
     launchSpin: number;
-    preference: number;
+    feel: number;
     forgiveness: number;
   };
+  /** Whether the build coherence pass swapped this item in from #2. */
+  swappedForCoherence?: boolean;
 }
 
 export interface FitRecommendationResult {
@@ -70,10 +89,20 @@ export interface FitRecommendationResult {
   driver: ScoredRecommendation[];
   irons: ScoredRecommendation[];
   shafts: ScoredRecommendation[];
+  /**
+   * @deprecated Kept for session-history backward compatibility.
+   * Use dataConfidence + matchStrength below.
+   */
   confidence: "High" | "Medium" | "Low";
+  /** How complete the player's input was. */
+  dataConfidence: DataConfidence;
+  /** How well the top picks scored relative to the candidate field. */
+  matchStrength: MatchStrength;
   buildSpecs: {
     lengthAdjustment: string;
     lieAdjustment: string;
     gripSize: string;
   };
+  /** Human-readable summary combining both confidence signals. */
+  confidenceSummary: string;
 }
