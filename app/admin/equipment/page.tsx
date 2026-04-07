@@ -193,6 +193,13 @@ function AdminContent() {
             </div>
           </div>
 
+          {/* Empty state */}
+          {parseResult.valid.length === 0 && parseResult.errorCount === 0 && (
+            <p className="mt-4 rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-700">
+              No data rows found. Make sure your file has the correct column headers in the first row and at least one data row below it.
+            </p>
+          )}
+
           {/* Error rows */}
           {parseResult.rows.filter((r) => r.errors.length > 0).length > 0 && (
             <div className="mt-4 space-y-2">
