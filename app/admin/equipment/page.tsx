@@ -171,11 +171,11 @@ function AdminContent() {
         )}
       </section>
 
-      {/* Step 3 – Preview + errors */}
+      {/* Step 3 – Preview + errors + upload action */}
       {parseResult && (
         <section className="mt-6 rounded-xl border border-gsgl-navy/10 bg-white p-6 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <h2 className="text-lg font-semibold text-gsgl-navy">3. Preview</h2>
+            <h2 className="text-lg font-semibold text-gsgl-navy">3. Preview &amp; Upload</h2>
             <div className="flex flex-wrap gap-2">
               {counts.map(([cat, n]) => (
                 <span
@@ -248,50 +248,49 @@ function AdminContent() {
               </table>
             </div>
           )}
-        </section>
-      )}
 
-      {/* Step 4 – Upload to Firestore */}
-      {parseResult && parseResult.valid.length > 0 && (
-        <section className="mt-6 rounded-xl border border-gsgl-navy/10 bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-gsgl-navy">4. Write to Firestore</h2>
-          <p className="mt-2 text-sm text-gsgl-gray">
-            Writes {parseResult.valid.length} valid row
-            {parseResult.valid.length !== 1 ? "s" : ""} to the{" "}
-            <code className="rounded bg-gsgl-offwhite px-1 py-0.5 font-mono">equipment</code>{" "}
-            collection using merge — existing fields not in your spreadsheet are preserved.
-            {parseResult.errorCount > 0 && (
-              <span className="text-amber-700">
-                {" "}
-                {parseResult.errorCount} row
-                {parseResult.errorCount !== 1 ? "s" : ""} with errors will be skipped.
-              </span>
-            )}
-          </p>
+          {/* Upload action */}
+          {parseResult.valid.length > 0 && (
+            <div className="mt-6 border-t border-gsgl-navy/10 pt-5">
+              <p className="text-sm text-gsgl-gray">
+                Writes {parseResult.valid.length} valid row
+                {parseResult.valid.length !== 1 ? "s" : ""} to the{" "}
+                <code className="rounded bg-gsgl-offwhite px-1 py-0.5 font-mono">equipment</code>{" "}
+                collection using merge — existing fields not in your spreadsheet are preserved.
+                {parseResult.errorCount > 0 && (
+                  <span className="text-amber-700">
+                    {" "}
+                    {parseResult.errorCount} row
+                    {parseResult.errorCount !== 1 ? "s" : ""} with errors will be skipped.
+                  </span>
+                )}
+              </p>
 
-          {uploadStatus === "done" && (
-            <p className="mt-3 rounded-md bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
-              {uploadMessage}
-            </p>
+              {uploadStatus === "done" && (
+                <p className="mt-3 rounded-md bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+                  {uploadMessage}
+                </p>
+              )}
+              {uploadStatus === "error" && (
+                <p className="mt-3 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {uploadMessage}
+                </p>
+              )}
+
+              <div className="mt-4">
+                <Button
+                  onClick={handleUpload}
+                  disabled={uploadStatus === "uploading" || uploadStatus === "done"}
+                >
+                  {uploadStatus === "uploading"
+                    ? "Uploading…"
+                    : uploadStatus === "done"
+                      ? "Uploaded"
+                      : `Upload ${parseResult.valid.length} options to Firestore`}
+                </Button>
+              </div>
+            </div>
           )}
-          {uploadStatus === "error" && (
-            <p className="mt-3 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
-              {uploadMessage}
-            </p>
-          )}
-
-          <div className="mt-4">
-            <Button
-              onClick={handleUpload}
-              disabled={uploadStatus === "uploading" || uploadStatus === "done"}
-            >
-              {uploadStatus === "uploading"
-                ? "Uploading…"
-                : uploadStatus === "done"
-                  ? "Uploaded"
-                  : `Upload ${parseResult.valid.length} options to Firestore`}
-            </Button>
-          </div>
         </section>
       )}
     </main>
