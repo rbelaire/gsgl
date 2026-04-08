@@ -1,15 +1,17 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { balls, drivers, irons, shafts } from "@/lib/data/seed";
 import type { EquipmentOption } from "@/lib/data/seed";
 import type { RecommendationCategory } from "@/lib/fitting/types";
+import { fetchEquipmentCatalog } from "@/lib/firebase/equipment";
 import { EquipmentCard } from "@/components/catalog/EquipmentCard";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/helpers/cn";
 
-const ALL_EQUIPMENT: EquipmentOption[] = [...drivers, ...shafts, ...irons, ...balls];
+// Seed data renders immediately; Firebase data replaces it once loaded.
+const SEED_EQUIPMENT: EquipmentOption[] = [...drivers, ...shafts, ...irons, ...balls];
 
 type FilterValue = "all" | RecommendationCategory;
 
@@ -21,22 +23,39 @@ const FILTERS: { label: string; value: FilterValue }[] = [
   { label: "Balls", value: "ball" },
 ];
 
-function countFor(value: FilterValue) {
-  return value === "all"
-    ? ALL_EQUIPMENT.length
-    : ALL_EQUIPMENT.filter((e) => e.category === value).length;
-}
-
 export default function CatalogPage() {
+  const [allEquipment, setAllEquipment] = useState<EquipmentOption[]>(SEED_EQUIPMENT);
+  const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<FilterValue>("all");
+
+  // Fetch the full Firestore catalog on mount; fall back to seed if unavailable.
+  useEffect(() => {
+    fetchEquipmentCatalog().then((catalog) => {
+      const flat = [
+        ...catalog.drivers,
+        ...catalog.shafts,
+        ...catalog.irons,
+        ...catalog.balls,
+      ];
+      // Only replace seed if Firestore returned something.
+      if (flat.length > 0) setAllEquipment(flat);
+      setLoading(false);
+    });
+  }, []);
 
   const filtered = useMemo(
     () =>
       activeFilter === "all"
-        ? ALL_EQUIPMENT
-        : ALL_EQUIPMENT.filter((e) => e.category === activeFilter),
-    [activeFilter],
+        ? allEquipment
+        : allEquipment.filter((e) => e.category === activeFilter),
+    [activeFilter, allEquipment],
   );
+
+  function countFor(value: FilterValue) {
+    return value === "all"
+      ? allEquipment.length
+      : allEquipment.filter((e) => e.category === value).length;
+  }
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-16 sm:py-20">
@@ -83,15 +102,21 @@ export default function CatalogPage() {
 
       {/* Results count */}
       <p className="mt-6 text-sm text-gsgl-gray">
-        Showing{" "}
-        <span className="font-semibold text-gsgl-navy">{filtered.length}</span>{" "}
-        {filtered.length === 1 ? "option" : "options"}
-        {activeFilter !== "all" && (
+        {loading ? (
+          <span className="text-gsgl-slate">Loading catalog…</span>
+        ) : (
           <>
-            {" "}in{" "}
-            <span className="font-semibold text-gsgl-navy capitalize">
-              {activeFilter === "irons" ? "Irons" : activeFilter + "s"}
-            </span>
+            Showing{" "}
+            <span className="font-semibold text-gsgl-navy">{filtered.length}</span>{" "}
+            {filtered.length === 1 ? "option" : "options"}
+            {activeFilter !== "all" && (
+              <>
+                {" "}in{" "}
+                <span className="font-semibold text-gsgl-navy capitalize">
+                  {activeFilter === "irons" ? "Irons" : activeFilter + "s"}
+                </span>
+              </>
+            )}
           </>
         )}
       </p>
