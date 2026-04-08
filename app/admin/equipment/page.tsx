@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { writeBatch, doc, collection } from "firebase/firestore";
-import { AuthGuard } from "@/components/auth/AuthGuard";
+import { AdminGuard } from "@/components/auth/AdminGuard";
 import { Button } from "@/components/ui/Button";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { db, isFirebaseConfigured } from "@/lib/firebase/client";
@@ -306,8 +306,8 @@ function AdminContent() {
 
 export default function AdminEquipmentPage() {
   return (
-    <AuthGuard>
+    <AdminGuard>
       <AdminContent />
-    </AuthGuard>
+    </AdminGuard>
   );
 }
