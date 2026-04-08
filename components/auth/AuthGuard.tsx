@@ -33,7 +33,7 @@ export function AuthGuard({ children }: Props) {
   if (loading) {
     return (
       <main className="flex min-h-[50vh] items-center justify-center">
-        <p className="text-sm text-gsgl-gray">Loading…</p>
+        <p className="text-sm text-gb-muted">Loading…</p>
       </main>
     );
   }

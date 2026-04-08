@@ -7,7 +7,7 @@ import { auth, isFirebaseConfigured } from "@/lib/firebase/client";
 import { Button } from "@/components/ui/Button";
 
 const INPUT_CLS =
-  "w-full rounded-md border border-gsgl-navy/20 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gsgl-gold/50";
+  "w-full rounded-md border border-gb-line px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gsgl-gold/50";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -47,15 +47,15 @@ export default function LoginPage() {
 
   return (
     <main className="mx-auto max-w-md px-4 py-20">
-      <h1 className="text-3xl font-bold tracking-tight text-gsgl-navy">Sign in</h1>
-      <p className="mt-3 text-sm leading-7 text-gsgl-gray">
+      <h1 className="text-3xl font-bold tracking-tight text-gb-text">Sign in</h1>
+      <p className="mt-3 text-sm leading-7 text-gb-muted">
         Access your fitting sessions and saved recommendations.
       </p>
 
-      <form onSubmit={handleSubmit} noValidate className="mt-8 rounded-xl border border-gsgl-navy/10 bg-white p-6 shadow-sm">
+      <form onSubmit={handleSubmit} noValidate className="mt-8 rounded-xl border border-gb-line bg-gb-panel p-6 shadow-sm">
         <div className="grid gap-4">
           <div>
-            <label className="block text-xs font-medium text-gsgl-navy mb-1" htmlFor="email">
+            <label className="block text-xs font-medium text-gb-text mb-1" htmlFor="email">
               Email
             </label>
             <input
@@ -69,7 +69,7 @@ export default function LoginPage() {
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gsgl-navy mb-1" htmlFor="password">
+            <label className="block text-xs font-medium text-gb-text mb-1" htmlFor="password">
               Password
             </label>
             <input

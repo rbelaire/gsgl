@@ -17,9 +17,9 @@ export function Stepper({ steps, currentStep }: StepperProps) {
             key={step}
             className={cn(
               "rounded-lg border px-3 py-3 text-sm",
-              isActive && "border-gsgl-gold bg-gsgl-sand text-gsgl-navy",
-              isComplete && "border-gsgl-navy/20 bg-white text-gsgl-navy",
-              !isActive && !isComplete && "border-gsgl-navy/10 bg-white/50 text-gsgl-gray",
+              isActive && "border-gsgl-gold bg-gb-card text-gb-text",
+              isComplete && "border-gb-line bg-gb-panel text-gb-text",
+              !isActive && !isComplete && "border-gb-line bg-gb-panel/50 text-gb-muted",
             )}
           >
             <p className="text-xs uppercase tracking-wide">Step {index + 1}</p>

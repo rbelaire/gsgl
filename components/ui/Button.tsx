@@ -1,12 +1,17 @@
 import Link from "next/link";
 import { cn } from "@/lib/helpers/cn";
 
-type ButtonVariant = "primary" | "secondary" | "ghost";
+type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
 
 const variantStyles: Record<ButtonVariant, string> = {
-  primary: "bg-gsgl-gold text-gsgl-navy hover:bg-[#b8995d] disabled:opacity-50 disabled:cursor-not-allowed",
-  secondary: "border border-gsgl-navy/20 bg-white text-gsgl-navy hover:bg-gsgl-sand disabled:opacity-50 disabled:cursor-not-allowed",
-  ghost: "text-gsgl-navy hover:bg-gsgl-navy/5 disabled:opacity-50 disabled:cursor-not-allowed",
+  primary:
+    "bg-gb-green text-white hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed",
+  secondary:
+    "border border-gb-line bg-transparent text-gb-text hover:bg-gb-panel disabled:opacity-50 disabled:cursor-not-allowed",
+  ghost:
+    "text-gb-muted hover:text-gb-text hover:bg-gb-panel/50 disabled:opacity-50 disabled:cursor-not-allowed",
+  danger:
+    "bg-gb-cta text-white hover:bg-gb-cta-hover disabled:opacity-50 disabled:cursor-not-allowed",
 };
 
 interface ButtonProps {

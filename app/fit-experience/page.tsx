@@ -12,12 +12,12 @@ export default function FitExperiencePage() {
 
       <div className="mt-10 space-y-4">
         {fitExperienceSteps.map((step, index) => (
-          <article key={step.title} className="grid gap-4 rounded-xl border border-gsgl-navy/10 bg-white p-6 shadow-sm md:grid-cols-[120px_1fr]">
+          <article key={step.title} className="grid gap-4 rounded-xl border border-gb-line bg-gb-panel p-6 shadow-sm md:grid-cols-[120px_1fr]">
             <div>
-              <p className="text-xs uppercase tracking-[0.18em] text-gsgl-slate">Stage {index + 1}</p>
-              <p className="mt-2 text-lg font-semibold text-gsgl-navy">{step.title}</p>
+              <p className="text-xs uppercase tracking-[0.18em] text-gb-muted">Stage {index + 1}</p>
+              <p className="mt-2 text-lg font-semibold text-gb-text">{step.title}</p>
             </div>
-            <p className="text-sm leading-7 text-gsgl-gray">{step.detail}</p>
+            <p className="text-sm leading-7 text-gb-muted">{step.detail}</p>
           </article>
         ))}
       </div>
