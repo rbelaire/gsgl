@@ -60,7 +60,7 @@ export default function FitResultsPage() {
           />
           <button
             onClick={() => window.print()}
-            className="print:hidden shrink-0 inline-flex items-center gap-2 rounded-md border border-gsgl-navy/20 bg-white px-4 py-2.5 text-sm font-semibold text-gsgl-navy transition-colors hover:bg-gsgl-sand"
+            className="print:hidden shrink-0 inline-flex items-center gap-2 rounded-md border border-gb-line bg-gb-panel px-4 py-2.5 text-sm font-semibold text-gb-text transition-colors hover:bg-gb-card"
           >
             Print / Export PDF
           </button>
@@ -80,17 +80,17 @@ export default function FitResultsPage() {
 
         {/* Score breakdown charts */}
         <section className="mt-8">
-          <h2 className="text-lg font-semibold text-gsgl-navy">Score breakdown by dimension</h2>
+          <h2 className="text-lg font-semibold text-gb-text">Score breakdown by dimension</h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {picks.map(({ title, rec }) => (
               <div
                 key={title}
-                className="rounded-xl border border-gsgl-navy/10 bg-white p-4 shadow-sm"
+                className="rounded-xl border border-gb-line bg-gb-panel p-4 shadow-sm"
               >
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gsgl-slate">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gb-muted">
                   {title.replace("Recommended ", "")}
                 </p>
-                <p className="mt-1 text-sm font-medium text-gsgl-navy">{rec.name}</p>
+                <p className="mt-1 text-sm font-medium text-gb-text">{rec.name}</p>
                 <ScoreBreakdownChart components={rec.components} />
               </div>
             ))}
@@ -106,50 +106,50 @@ export default function FitResultsPage() {
           ].map(({ label, value }) => (
             <div
               key={label}
-              className="rounded-xl border border-gsgl-navy/10 bg-white p-5 shadow-sm"
+              className="rounded-xl border border-gb-line bg-gb-panel p-5 shadow-sm"
             >
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gsgl-slate">
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gb-muted">
                 {label}
               </p>
-              <p className="mt-2 text-lg font-semibold text-gsgl-navy">{value}</p>
+              <p className="mt-2 text-lg font-semibold text-gb-text">{value}</p>
             </div>
           ))}
         </section>
 
         {/* Rationale + confidence */}
         <section className="mt-8 grid gap-6 lg:grid-cols-[1.3fr_1fr]">
-          <article className="rounded-xl border border-gsgl-navy/10 bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-semibold text-gsgl-navy">Fit rationale</h2>
+          <article className="rounded-xl border border-gb-line bg-gb-panel p-6 shadow-sm">
+            <h2 className="text-xl font-semibold text-gb-text">Fit rationale</h2>
             <ul className="mt-4 space-y-2">
               {picks
                 .flatMap((p) => p.rec.reasons)
                 .slice(0, 6)
                 .map((r, i) => (
-                  <li key={i} className="text-sm leading-6 text-gsgl-gray">
+                  <li key={i} className="text-sm leading-6 text-gb-muted">
                     • {r}
                   </li>
                 ))}
             </ul>
           </article>
 
-          <article className="rounded-xl border border-gsgl-gold/30 bg-gsgl-sand p-6 shadow-sm">
-            <h2 className="text-xl font-semibold text-gsgl-navy">Confidence Level</h2>
+          <article className="rounded-xl border border-gb-green/20 bg-gb-card p-6 shadow-sm">
+            <h2 className="text-xl font-semibold text-gb-text">Confidence Level</h2>
             <div className="mt-3 flex items-end gap-3">
-              <p className="text-4xl font-bold text-gsgl-navy">{overallPct}%</p>
+              <p className="text-4xl font-bold text-gb-text">{overallPct}%</p>
               <span
                 className={`mb-1 rounded-md border px-2 py-0.5 text-xs font-semibold ${CONFIDENCE_BADGE[confidence]}`}
               >
                 {confidence}
               </span>
             </div>
-            <p className="mt-3 text-sm text-gsgl-gray">{CONFIDENCE_MSG[confidence]}</p>
+            <p className="mt-3 text-sm text-gb-muted">{CONFIDENCE_MSG[confidence]}</p>
           </article>
         </section>
 
         {/* Next steps */}
-        <section className="mt-8 rounded-xl border border-gsgl-navy/10 bg-white p-6 shadow-sm">
-          <h2 className="text-xl font-semibold text-gsgl-navy">Next Steps</h2>
-          <ul className="mt-4 space-y-2 text-sm text-gsgl-gray">
+        <section className="mt-8 rounded-xl border border-gb-line bg-gb-panel p-6 shadow-sm">
+          <h2 className="text-xl font-semibold text-gb-text">Next Steps</h2>
+          <ul className="mt-4 space-y-2 text-sm text-gb-muted">
             <li>• Validate driver setup in a 10-shot controlled test block.</li>
             <li>• Confirm iron descent angles with 7-iron and 5-iron sessions.</li>
             <li>• Recheck bag gapping after final shaft decision.</li>
@@ -184,25 +184,25 @@ export default function FitResultsPage() {
       </div>
 
       <section className="mt-10 grid gap-6 lg:grid-cols-[1.3fr_1fr]">
-        <article className="rounded-xl border border-gsgl-navy/10 bg-white p-6 shadow-sm">
-          <h2 className="text-xl font-semibold text-gsgl-navy">Why this was chosen</h2>
-          <p className="mt-4 text-sm leading-7 text-gsgl-gray">
+        <article className="rounded-xl border border-gb-line bg-gb-panel p-6 shadow-sm">
+          <h2 className="text-xl font-semibold text-gb-text">Why this was chosen</h2>
+          <p className="mt-4 text-sm leading-7 text-gb-muted">
             Launch and dispersion inputs indicate the player benefits from reducing driver spin while preserving iron descent angle. The selected setup prioritizes tighter directional control and predictable carry gaps.
           </p>
         </article>
 
-        <article className="rounded-xl border border-gsgl-gold/30 bg-gsgl-sand p-6 shadow-sm">
-          <h2 className="text-xl font-semibold text-gsgl-navy">Confidence Level</h2>
-          <p className="mt-3 text-4xl font-bold text-gsgl-navy">84%</p>
-          <p className="mt-3 text-sm text-gsgl-gray">
+        <article className="rounded-xl border border-gb-green/20 bg-gb-card p-6 shadow-sm">
+          <h2 className="text-xl font-semibold text-gb-text">Confidence Level</h2>
+          <p className="mt-3 text-4xl font-bold text-gb-text">84%</p>
+          <p className="mt-3 text-sm text-gb-muted">
             Sample values. Run a full fitting session to see live confidence scores.
           </p>
         </article>
       </section>
 
-      <section className="mt-10 rounded-xl border border-gsgl-navy/10 bg-white p-6 shadow-sm">
-        <h2 className="text-xl font-semibold text-gsgl-navy">Next Steps</h2>
-        <ul className="mt-4 space-y-2 text-sm text-gsgl-gray">
+      <section className="mt-10 rounded-xl border border-gb-line bg-gb-panel p-6 shadow-sm">
+        <h2 className="text-xl font-semibold text-gb-text">Next Steps</h2>
+        <ul className="mt-4 space-y-2 text-sm text-gb-muted">
           <li>• Validate driver setup in a 10-shot controlled test block.</li>
           <li>• Confirm iron descent angles with 7-iron and 5-iron sessions.</li>
           <li>• Recheck bag gapping after final shaft decision.</li>

@@ -14,7 +14,7 @@ interface Props {
     distance: number;
     dispersion: number;
     launchSpin: number;
-    preference: number;
+    feel: number;
     forgiveness: number;
   };
 }
@@ -23,7 +23,7 @@ const AXIS_LABELS: Record<keyof Props["components"], string> = {
   distance: "Distance",
   dispersion: "Dispersion",
   launchSpin: "Launch/Spin",
-  preference: "Preference",
+  feel: "Feel",
   forgiveness: "Forgiveness",
 };
 

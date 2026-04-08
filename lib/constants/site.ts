@@ -1,14 +1,14 @@
 export const siteConfig = {
-  name: "Gulf South Golf Lab",
+  name: "The Golf Build",
   description:
-    "Data-driven golf fitting platform for better equipment decisions across ball, club, and shaft setup.",
-  tagline: "Structured fitting, grounded in player data and real-world performance.",
+    "Club fitting, training routines, and a 330-drill library — everything you need to build your game.",
+  tagline: "Fitting data meets practice science. Build the game you want.",
   navLinks: [
     { label: "Home", href: "/" },
-    { label: "About", href: "/about" },
-    { label: "Services", href: "/services" },
-    { label: "Fit Experience", href: "/fit-experience" },
+    { label: "Fit", href: "/fit/new" },
+    { label: "Training", href: "/training" },
+    { label: "Drills", href: "/drills" },
+    { label: "Stats", href: "/stats" },
     { label: "Dashboard", href: "/dashboard" },
-    { label: "Contact", href: "/contact" },
   ],
 };
