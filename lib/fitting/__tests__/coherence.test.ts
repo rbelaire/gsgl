@@ -5,9 +5,10 @@ import type { ScoredRecommendation } from "../types";
 function makeRec(
   overrides: Partial<ScoredRecommendation> & { id: string },
 ): ScoredRecommendation {
+  const { id, ...rest } = overrides;
   return {
-    id: overrides.id,
-    name: overrides.id,
+    id,
+    name: id,
     category: "driver",
     score: 75,
     reasons: [],
@@ -20,7 +21,7 @@ function makeRec(
       feel: 50,
       forgiveness: 50,
     },
-    ...overrides,
+    ...rest,
   };
 }
 

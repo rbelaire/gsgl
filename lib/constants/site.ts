@@ -5,10 +5,10 @@ export const siteConfig = {
   tagline: "Fitting data meets practice science. Build the game you want.",
   navLinks: [
     { label: "Home", href: "/" },
-    { label: "Fit", href: "/fit/new" },
-    { label: "Training", href: "/training" },
-    { label: "Drills", href: "/drills" },
-    { label: "Stats", href: "/stats" },
+    { label: "About", href: "/about" },
+    { label: "Services", href: "/services" },
+    { label: "Equipment", href: "/catalog" },
+    { label: "Fit Experience", href: "/fit-experience" },
     { label: "Dashboard", href: "/dashboard" },
   ],
 };
