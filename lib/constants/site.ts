@@ -7,6 +7,7 @@ export const siteConfig = {
     { label: "Home", href: "/" },
     { label: "About", href: "/about" },
     { label: "Services", href: "/services" },
+    { label: "Equipment", href: "/catalog" },
     { label: "Fit Experience", href: "/fit-experience" },
     { label: "Dashboard", href: "/dashboard" },
     { label: "Contact", href: "/contact" },
