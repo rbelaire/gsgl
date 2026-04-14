@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireUserId, AuthError } from "@/lib/firebase/auth-server";
 import { buildRulesRoutine, normalizeProfile, validateProfileShape } from "@/lib/training/drills";
 
 export async function POST(req: NextRequest) {
   try {
+    await requireUserId(req);
     const body = await req.json();
     const rawProfile = body?.profile;
 
@@ -30,7 +32,8 @@ export async function POST(req: NextRequest) {
         reflections: {},
       },
     });
-  } catch {
+  } catch (err) {
+    if (err instanceof AuthError) return NextResponse.json({ error: err.message }, { status: 401 });
     return NextResponse.json({ error: "Failed to generate routine" }, { status: 500 });
   }
 }

@@ -105,11 +105,26 @@ export function downloadTemplate() {
 
 // ── Parser ───────────────────────────────────────────────────────────────────
 
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+const READ_TIMEOUT_MS = 30_000; // 30 seconds
+
 export function parseEquipmentFile(file: File): Promise<ParseResult> {
+  if (file.size > MAX_FILE_SIZE_BYTES) {
+    return Promise.reject(
+      new Error(`File too large: maximum allowed size is ${MAX_FILE_SIZE_BYTES / 1024 / 1024} MB`),
+    );
+  }
+
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
 
+    const timeoutId = setTimeout(() => {
+      reader.abort();
+      reject(new Error("File read timed out"));
+    }, READ_TIMEOUT_MS);
+
     reader.onload = (e) => {
+      clearTimeout(timeoutId);
       try {
         const data = new Uint8Array(e.target!.result as ArrayBuffer);
         const wb = XLSX.read(data, { type: "array" });
@@ -138,7 +153,10 @@ export function parseEquipmentFile(file: File): Promise<ParseResult> {
       }
     };
 
-    reader.onerror = () => reject(new Error("Failed to read file"));
+    reader.onerror = () => {
+      clearTimeout(timeoutId);
+      reject(new Error("Failed to read file"));
+    };
     reader.readAsArrayBuffer(file);
   });
 }

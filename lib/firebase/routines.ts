@@ -9,6 +9,7 @@ import {
   query,
   where,
   orderBy,
+  limit,
   serverTimestamp,
 } from "firebase/firestore";
 import { db } from "./client";
@@ -26,8 +27,15 @@ function routineDocRef(id: string) {
   return doc(db, ROUTINES_COLLECTION, id);
 }
 
+const MAX_ROUTINES_PER_FETCH = 200;
+
 export async function getUserRoutines(userId: string): Promise<Routine[]> {
-  const q = query(routinesRef(), where("userId", "==", userId), orderBy("createdAt", "desc"));
+  const q = query(
+    routinesRef(),
+    where("userId", "==", userId),
+    orderBy("createdAt", "desc"),
+    limit(MAX_ROUTINES_PER_FETCH),
+  );
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Routine, "id">) }));
 }
@@ -44,24 +52,34 @@ export async function createRoutine(userId: string, routine: Omit<Routine, "id" 
   return { id: docRef.id, ...(snap.data() as Omit<Routine, "id">) };
 }
 
+async function assertOwnership(userId: string, routineId: string): Promise<Routine> {
+  const snap = await getDoc(routineDocRef(routineId));
+  if (!snap.exists()) throw new Error("Routine not found");
+  const data = snap.data() as Routine;
+  if (data.userId !== userId) throw new Error("Forbidden: you do not own this routine");
+  return data;
+}
+
 export async function updateRoutine(
+  userId: string,
   routineId: string,
   fields: Partial<Pick<Routine, "title" | "meta" | "weeks" | "completions" | "reflections">>,
 ): Promise<void> {
+  await assertOwnership(userId, routineId);
   await updateDoc(routineDocRef(routineId), fields);
 }
 
-export async function deleteRoutine(routineId: string): Promise<void> {
+export async function deleteRoutine(userId: string, routineId: string): Promise<void> {
+  await assertOwnership(userId, routineId);
   await deleteDoc(routineDocRef(routineId));
 }
 
 export async function toggleSessionCompletion(
+  userId: string,
   routineId: string,
   key: string,
 ): Promise<boolean> {
-  const snap = await getDoc(routineDocRef(routineId));
-  if (!snap.exists()) throw new Error("Routine not found");
-  const data = snap.data() as Routine;
+  const data = await assertOwnership(userId, routineId);
   const completions = { ...(data.completions ?? {}) };
   completions[key] = !completions[key];
   await updateDoc(routineDocRef(routineId), { completions });
@@ -69,13 +87,12 @@ export async function toggleSessionCompletion(
 }
 
 export async function saveReflection(
+  userId: string,
   routineId: string,
   key: string,
   reflection: Reflection,
 ): Promise<void> {
-  const snap = await getDoc(routineDocRef(routineId));
-  if (!snap.exists()) throw new Error("Routine not found");
-  const data = snap.data() as Routine;
+  const data = await assertOwnership(userId, routineId);
   const reflections = { ...(data.reflections ?? {}), [key]: reflection };
   await updateDoc(routineDocRef(routineId), { reflections });
 }

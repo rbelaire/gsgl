@@ -1,3 +1,127 @@
+# Security & Performance Hardening
+
+This section documents security and performance fixes applied after an audit of
+the codebase.  All changes are in the `claude/fix-security-performance-CsHKf`
+branch (commit `74c2cee`).
+
+---
+
+## Security fixes
+
+### Routine ownership enforcement (HIGH)
+
+**Files**: `lib/firebase/routines.ts`, `app/api/routines/[id]/route.ts`,
+`app/api/routines/[id]/complete/route.ts`
+
+Previously, any authenticated user could `PUT`, `DELETE`, or toggle completion
+on any routine if they knew its Firestore document ID.  The API routes verified
+the caller was logged in but never checked that the caller owned the target
+document.
+
+**Fix**: Added a shared `assertOwnership(userId, routineId)` helper in
+`routines.ts` that fetches the document and throws `"Forbidden: you do not own
+this routine"` when the stored `userId` field does not match the caller.  Every
+mutating function (`updateRoutine`, `deleteRoutine`, `toggleSessionCompletion`,
+`saveReflection`) now accepts a `userId` first argument and calls this helper
+before writing.  API routes propagate the verified `uid` returned by
+`requireUserId()`.  Forbidden violations now return HTTP 403 rather than 500.
+
+### Auth gate on routine-generation endpoint (HIGH)
+
+**File**: `app/api/routines/generate/route.ts`
+
+The `/api/routines/generate` endpoint was publicly accessible without
+authentication, allowing unauthenticated callers to invoke the routine-
+generation logic at will.
+
+**Fix**: Added `requireUserId(req)` at the top of the handler.  Unauthenticated
+requests now receive HTTP 401.
+
+### sessionStorage data validation (MEDIUM)
+
+**File**: `app/fit/results/page.tsx`
+
+The results page read raw JSON from `sessionStorage` and passed it directly to
+`setState` without any structural validation.  Malformed or tampered data could
+crash the component.
+
+**Fix**: Added a Zod schema (`fitResultSchema`) that mirrors `FitRecommendationResult`.
+Parsed JSON is now validated before being applied to state; invalid data falls
+through to the mock layout.
+
+### Security HTTP response headers (LOW)
+
+**File**: `next.config.ts`
+
+No explicit security headers were set on responses, leaving browsers without
+standard protections.
+
+**Fix**: Added the following headers to all routes via `next.config.ts`:
+
+| Header | Value |
+|--------|-------|
+| `X-Content-Type-Options` | `nosniff` |
+| `X-Frame-Options` | `DENY` |
+| `X-XSS-Protection` | `1; mode=block` |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` |
+| `Permissions-Policy` | `camera=(), microphone=(), geolocation=()` |
+
+---
+
+## Performance fixes
+
+### Bounded Firestore query in getUserRoutines (MEDIUM)
+
+**File**: `lib/firebase/routines.ts`
+
+`getUserRoutines()` fetched every routine document owned by a user with no
+upper bound.  As routine counts grow this becomes an unbounded Firestore read
+that would increase latency and cost linearly.
+
+**Fix**: Added `limit(200)` to the query (constant `MAX_ROUTINES_PER_FETCH`).
+This is a safe default for the current UI; pagination can be layered on later.
+
+### File upload size and timeout guard (MEDIUM)
+
+**File**: `lib/admin/parse-equipment-excel.ts`
+
+The Excel parser accepted any file size and had no timeout on the `FileReader`
+operation, making it possible to crash or stall the browser tab with a large
+file.
+
+**Fix**:
+- Files larger than 10 MB are rejected synchronously before a `FileReader` is
+  created.
+- A 30-second `setTimeout` aborts the `FileReader` if it has not completed,
+  and the promise is rejected with a descriptive error.
+
+---
+
+## Code quality
+
+### Typo fix — groupByCateory → groupByCategory
+
+**File**: `lib/firebase/equipment.ts`
+
+The private helper function was consistently misspelled.  Renamed at definition
+and all three call sites.
+
+---
+
+## Open items (not fixed in this pass)
+
+The following issues require infrastructure or larger architectural changes that
+are out of scope for this patch:
+
+| Issue | Reason deferred |
+|-------|----------------|
+| **Credential rotation** — Firebase API key and service-account private key visible in git history | Requires Firebase Console access; rotate immediately if not already done |
+| **Rate limiting on API routes** | Requires an external store (e.g. Upstash Redis); add before production traffic |
+| **Admin guard is client-side only** | Low risk because Firestore rules enforce write access; server-side check recommended before adding sensitive admin APIs |
+| **Stats computed in-memory over all routines** | Acceptable at current scale; move to Firestore aggregation or Cloud Functions when routine counts grow beyond the 200-doc fetch limit |
+
+---
+
 # Scoring Engine Refactor — Change Log
 
 This document summarises every logic decision made during the refactor so the
