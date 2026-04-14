@@ -15,11 +15,20 @@ const CHIP = (active: boolean) =>
       : "border-gb-line bg-gb-panel text-gb-muted hover:border-gb-green/40 hover:text-gb-text"
   }`;
 
+function formatSessionLength(hours: number): string {
+  const totalMinutes = Math.round(hours * 60);
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
+  if (h === 0) return `${m} min`;
+  if (m === 0) return `${h} hr`;
+  return `${h} hr ${m} min`;
+}
+
 function TrainingContent() {
   const { user } = useAuth();
 
   // Profile form state
-  const [name, setName] = useState("");
+  const [routineName, setRoutineName] = useState("");
   const [handicap, setHandicap] = useState<string>("");
   const [weaknesses, setWeaknesses] = useState<string[]>([]);
   const [daysPerWeek, setDaysPerWeek] = useState(3);
@@ -61,11 +70,11 @@ function TrainingContent() {
   }
 
   async function handleGenerate() {
-    if (!handicap || weaknesses.length === 0) return;
+    if (!routineName.trim() || !handicap || weaknesses.length === 0) return;
     setGenerating(true);
     try {
       const profile: TrainingProfile = {
-        name: name || "Player",
+        name: routineName.trim(),
         handicap,
         weakness: weaknesses[0],
         weaknesses,
@@ -73,13 +82,19 @@ function TrainingContent() {
         hoursPerSession,
         notes,
       };
+      const headers = { ...(await authHeader()), "Content-Type": "application/json" };
       const res = await fetch("/api/routines/generate", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ profile }),
       });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        console.error("Generate failed:", err);
+        return;
+      }
       const data = await res.json();
-      setGenerated(data.routine);
+      if (data.routine) setGenerated(data.routine);
     } finally {
       setGenerating(false);
     }
@@ -157,8 +172,15 @@ function TrainingContent() {
 
             <div className="mt-4 space-y-4">
               <div>
-                <label className="mb-1 block text-xs font-medium text-gb-muted">Name</label>
-                <input className={INPUT} placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} />
+                <label className="mb-1 block text-xs font-medium text-gb-muted">
+                  Routine name <span className="text-gb-cta">*</span>
+                </label>
+                <input
+                  className={INPUT}
+                  placeholder="e.g. Spring Improvement Plan"
+                  value={routineName}
+                  onChange={(e) => setRoutineName(e.target.value)}
+                />
               </div>
 
               <div>
@@ -203,10 +225,10 @@ function TrainingContent() {
 
               <div>
                 <label className="mb-1 block text-xs font-medium text-gb-muted">
-                  Session length: <span className="text-gb-text">{hoursPerSession}hr</span>
+                  Session length: <span className="text-gb-text">{formatSessionLength(hoursPerSession)}</span>
                 </label>
                 <input
-                  type="range" min={0.5} max={4} step={0.5} value={hoursPerSession}
+                  type="range" min={0.5} max={4} step={0.25} value={hoursPerSession}
                   onChange={(e) => setHoursPerSession(Number(e.target.value))}
                   className="w-full accent-gb-green"
                 />
@@ -227,7 +249,7 @@ function TrainingContent() {
             <Button
               className="mt-4 w-full"
               onClick={handleGenerate}
-              disabled={generating || !handicap || weaknesses.length === 0}
+              disabled={generating || !routineName.trim() || !handicap || weaknesses.length === 0}
             >
               {generating ? "Generating…" : "Generate 4-Week Routine"}
             </Button>

@@ -202,7 +202,7 @@ export function normalizeProfile(raw: Partial<TrainingProfile>): TrainingProfile
     weakness,
     weaknesses,
     daysPerWeek: Math.max(1, Math.min(7, Math.round(Number(raw.daysPerWeek ?? 3)))),
-    hoursPerSession: Math.max(0.5, Math.min(4, Math.round(Number(raw.hoursPerSession ?? 1.5) * 2) / 2)),
+    hoursPerSession: Math.max(0.5, Math.min(4, Math.round(Number(raw.hoursPerSession ?? 1.5) * 4) / 4)),
     notes: String(raw.notes ?? "").slice(0, 2000),
   };
 }

@@ -15,12 +15,13 @@ export async function POST(req: NextRequest) {
     const profile = normalizeProfile(rawProfile);
     const { weeks } = buildRulesRoutine(profile);
 
-    const title =
-      profile.weaknesses.length > 1
-        ? `${profile.weaknesses[0]} & ${profile.weaknesses[1]}`
-        : profile.weaknesses[0] ?? "Custom Routine";
+    const title = profile.name;
 
-    const meta = `${profile.handicap} · ${profile.daysPerWeek} day${profile.daysPerWeek > 1 ? "s" : ""}/week · ${profile.hoursPerSession}hr/session`;
+    const totalMinutes = Math.round(profile.hoursPerSession * 60);
+    const h = Math.floor(totalMinutes / 60);
+    const m = totalMinutes % 60;
+    const sessionLengthLabel = h === 0 ? `${m} min` : m === 0 ? `${h} hr` : `${h} hr ${m} min`;
+    const meta = `${profile.handicap} · ${profile.daysPerWeek} day${profile.daysPerWeek > 1 ? "s" : ""}/week · ${sessionLengthLabel}/session`;
 
     return NextResponse.json({
       routine: {
