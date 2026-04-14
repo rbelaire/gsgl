@@ -25,7 +25,7 @@ const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 
 const SEED_CATALOG: EquipmentCatalog = { balls, drivers, irons, shafts };
 
-function groupByCateory(options: EquipmentOption[]): EquipmentCatalog {
+function groupByCategory(options: EquipmentOption[]): EquipmentCatalog {
   return {
     balls: options.filter((o) => o.category === "ball"),
     drivers: options.filter((o) => o.category === "driver"),
@@ -68,7 +68,7 @@ export async function fetchEquipmentCatalog(): Promise<EquipmentCatalog> {
   if (!isFirebaseConfigured || !db) return SEED_CATALOG;
 
   const cached = readCache();
-  if (cached) return groupByCateory(cached);
+  if (cached) return groupByCategory(cached);
 
   try {
     const snapshot = await getDocs(collection(db, "equipment"));
@@ -76,7 +76,7 @@ export async function fetchEquipmentCatalog(): Promise<EquipmentCatalog> {
 
     const data = snapshot.docs.map((d) => d.data() as EquipmentOption);
     writeCache(data);
-    return groupByCateory(data);
+    return groupByCategory(data);
   } catch {
     // Network error or permission issue — fall back to seed
     return SEED_CATALOG;

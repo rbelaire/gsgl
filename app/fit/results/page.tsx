@@ -1,12 +1,47 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { z } from "zod";
 import { RecommendationCard } from "@/components/results/RecommendationCard";
 import { ScoreBreakdownChart } from "@/components/results/ScoreBreakdownChart";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Button } from "@/components/ui/Button";
 import { resultPanels } from "@/lib/mock-data/site";
 import type { FitRecommendationResult } from "@/lib/fitting/types";
+
+const scoredRecSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  category: z.enum(["ball", "driver", "irons", "shaft"]),
+  score: z.number(),
+  reasons: z.array(z.string()),
+  expectedImprovement: z.string(),
+  confidence: z.enum(["High", "Medium", "Low"]),
+  components: z.object({
+    distance: z.number(),
+    dispersion: z.number(),
+    launchSpin: z.number(),
+    feel: z.number(),
+    forgiveness: z.number(),
+  }),
+  swappedForCoherence: z.boolean().optional(),
+});
+
+const fitResultSchema = z.object({
+  ball: z.array(scoredRecSchema),
+  driver: z.array(scoredRecSchema),
+  irons: z.array(scoredRecSchema),
+  shafts: z.array(scoredRecSchema),
+  confidence: z.enum(["High", "Medium", "Low"]),
+  dataConfidence: z.enum(["none", "profile_only", "profile_and_launch"]),
+  matchStrength: z.enum(["strong", "moderate", "weak"]),
+  buildSpecs: z.object({
+    lengthAdjustment: z.string(),
+    lieAdjustment: z.string(),
+    gripSize: z.string(),
+  }),
+  confidenceSummary: z.string(),
+});
 
 const CONFIDENCE_BADGE: Record<string, string> = {
   High: "text-emerald-700 bg-emerald-50 border-emerald-200",
@@ -27,9 +62,11 @@ export default function FitResultsPage() {
     const stored = sessionStorage.getItem("gsgl_fit_result");
     if (stored) {
       try {
-        setResult(JSON.parse(stored));
+        const parsed = JSON.parse(stored);
+        const validated = fitResultSchema.parse(parsed) as FitRecommendationResult;
+        setResult(validated);
       } catch {
-        // fall through to mock display
+        // Invalid or tampered data — fall through to mock display
       }
     }
   }, []);
