@@ -88,7 +88,7 @@ export default function FitResultsPage() {
     );
 
     return (
-      <main className="mx-auto max-w-6xl px-4 py-16 sm:py-20">
+      <main className="mx-auto max-w-6xl px-4 py-16 sm:py-20 print:py-3">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <SectionHeader
             eyebrow="Results"
@@ -104,7 +104,7 @@ export default function FitResultsPage() {
         </div>
 
         {/* Top picks */}
-        <div className="mt-10 grid gap-5 lg:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-10 grid gap-5 lg:grid-cols-2 xl:grid-cols-4 print:grid-cols-2">
           {picks.map(({ title, rec }) => (
             <RecommendationCard
               key={title}
@@ -118,7 +118,7 @@ export default function FitResultsPage() {
         {/* Score breakdown charts */}
         <section className="mt-8">
           <h2 className="text-lg font-semibold text-gb-text">Score breakdown by dimension</h2>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 print:grid-cols-2">
             {picks.map(({ title, rec }) => (
               <div
                 key={title}
@@ -207,7 +207,7 @@ export default function FitResultsPage() {
 
   // ── Fallback: sample/mock layout ──────────────────────────────────────
   return (
-    <main className="mx-auto max-w-6xl px-4 py-16 sm:py-20">
+    <main className="mx-auto max-w-6xl px-4 py-16 sm:py-20 print:py-3">
       <SectionHeader
         eyebrow="Results"
         title="Recommendation Summary"
