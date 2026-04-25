@@ -27,3 +27,73 @@ main {
 .badge-pressure  { background: rgba(248,113,113,0.15); color: #f87171; }
 .badge-random,
 .badge-transfer  { background: rgba(167,139,250,0.15); color: #a78bfa; }
+
+/* ── Print / PDF styles ─────────────────────────────────────────────────── */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 1.4cm 1.5cm;
+  }
+
+  body {
+    background-color: #fff !important;
+    color: #111 !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  main {
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+    min-height: unset !important;
+  }
+
+  /* Convert dark panels/cards to white */
+  .bg-gb-bg,
+  .bg-gb-panel,
+  .bg-gb-card {
+    background-color: #fff !important;
+  }
+
+  /* Readable text on white */
+  .text-gb-text {
+    color: #111 !important;
+  }
+
+  .text-gb-muted {
+    color: #555 !important;
+  }
+
+  /* Visible borders on white */
+  .border-gb-line {
+    border-color: #ddd !important;
+  }
+
+  /* Confidence card accent border */
+  .border-gb-green\/20 {
+    border-color: #ddd !important;
+  }
+
+  /* Radar chart: lighten grid lines and axis labels for white background */
+  .recharts-polar-angle-axis-tick text {
+    fill: #555 !important;
+  }
+
+  .recharts-polar-grid-angle line,
+  .recharts-polar-grid-concentric path {
+    stroke: #ccc !important;
+  }
+
+  /* Keep individual cards/articles whole — never split mid-card */
+  article,
+  .rounded-xl {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Keep headings with the content that follows */
+  h2 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+}

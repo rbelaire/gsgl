@@ -92,7 +92,7 @@ function AdminContent() {
     : [];
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-16 sm:py-20">
+    <main className="mx-auto max-w-6xl px-4 py-10 sm:py-20">
       <SectionHeader
         eyebrow="Admin"
         title="Equipment Catalog Upload"
@@ -100,12 +100,27 @@ function AdminContent() {
       />
 
       {/* Step 1 – Template */}
-      <section className="mt-10 rounded-xl border border-gb-line bg-gb-panel p-6 shadow-sm">
+      <section className="mt-8 rounded-xl border border-gb-line bg-gb-panel p-4 sm:p-6 shadow-sm">
         <h2 className="text-lg font-semibold text-gb-text">1. Download template</h2>
         <p className="mt-2 text-sm text-gb-muted">
           The template includes all required columns, valid values for each field, and two example rows.
         </p>
-        <div className="mt-4 overflow-x-auto">
+
+        {/* Mobile: stacked column reference */}
+        <div className="mt-4 grid grid-cols-2 gap-2 sm:hidden">
+          {COLUMNS.map((c) => (
+            <div key={c.key} className="rounded-lg border border-gb-line bg-gb-bg px-3 py-2">
+              <p className="text-xs font-semibold text-gb-text">
+                {c.label}
+                {c.required && <span className="ml-0.5 text-red-500">*</span>}
+              </p>
+              <p className="mt-0.5 text-xs text-gb-muted italic leading-snug">{c.hint}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop: full table */}
+        <div className="mt-4 hidden sm:block overflow-x-auto">
           <table className="text-xs w-full border-collapse">
             <thead>
               <tr className="bg-gb-bg">
@@ -132,6 +147,7 @@ function AdminContent() {
             </thead>
           </table>
         </div>
+
         <div className="mt-4">
           <Button variant="secondary" onClick={downloadTemplate}>
             Download template (.xlsx)
@@ -140,14 +156,14 @@ function AdminContent() {
       </section>
 
       {/* Step 2 – Upload file */}
-      <section className="mt-6 rounded-xl border border-gb-line bg-gb-panel p-6 shadow-sm">
+      <section className="mt-4 sm:mt-6 rounded-xl border border-gb-line bg-gb-panel p-4 sm:p-6 shadow-sm">
         <h2 className="text-lg font-semibold text-gb-text">2. Upload your file</h2>
         <p className="mt-2 text-sm text-gb-muted">
           Accepts .xlsx or .xls. The first sheet is used; the first row must be the header.
         </p>
 
         <div
-          className="mt-4 flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gb-line bg-gb-bg px-6 py-10 text-center transition-colors hover:border-gsgl-gold/60 hover:bg-gb-card/30"
+          className="mt-4 flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gb-line bg-gb-bg px-6 py-8 sm:py-10 text-center transition-colors hover:border-gsgl-gold/60 hover:bg-gb-card/30"
           onClick={() => inputRef.current?.click()}
           onKeyDown={(e) => e.key === "Enter" && inputRef.current?.click()}
           role="button"
@@ -173,8 +189,8 @@ function AdminContent() {
 
       {/* Step 3 – Preview + errors + upload action */}
       {parseResult && (
-        <section className="mt-6 rounded-xl border border-gb-line bg-gb-panel p-6 shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-4">
+        <section className="mt-4 sm:mt-6 rounded-xl border border-gb-line bg-gb-panel p-4 sm:p-6 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-lg font-semibold text-gb-text">3. Preview &amp; Upload</h2>
             <div className="flex flex-wrap gap-2">
               {counts.map(([cat, n]) => (
@@ -217,9 +233,39 @@ function AdminContent() {
             </div>
           )}
 
-          {/* Valid rows table */}
+          {/* Valid rows – mobile card list */}
           {parseResult.valid.length > 0 && (
-            <div className="mt-4 overflow-x-auto">
+            <div className="mt-4 space-y-2 sm:hidden">
+              {parseResult.valid.map((opt) => {
+                const attrs = (["spinProfile", "launchProfile", "feel", "forgivenessLevel", "bias", "weightClass"] as const)
+                  .filter((k) => (opt as unknown as Record<string, unknown>)[k]);
+                return (
+                  <div key={opt.id} className="rounded-lg border border-gb-line bg-gb-bg px-3 py-2.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-medium text-gb-text truncate">{opt.name}</p>
+                      <span className={`shrink-0 rounded px-1.5 py-0.5 text-xs font-semibold ${CATEGORY_COLORS[opt.category] ?? ""}`}>
+                        {opt.category}
+                      </span>
+                    </div>
+                    {attrs.length > 0 && (
+                      <div className="mt-1.5 grid grid-cols-2 gap-x-4 gap-y-0.5">
+                        {attrs.map((k) => (
+                          <p key={k} className="text-xs text-gb-muted">
+                            <span className="text-gb-text/60">{k}:</span>{" "}
+                            {(opt as unknown as Record<string, unknown>)[k] as string}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Valid rows – desktop table */}
+          {parseResult.valid.length > 0 && (
+            <div className="mt-4 hidden sm:block overflow-x-auto">
               <table className="w-full border-collapse text-xs">
                 <thead>
                   <tr className="bg-gb-bg">
