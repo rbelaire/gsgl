@@ -257,9 +257,9 @@ export default function NewSwingReportPage() {
         },
       },
       video: {
-        name: videoFile.name,
-        size: videoFile.size,
-        type: videoFile.type,
+        name: videoFile!.name,
+        size: videoFile!.size,
+        type: videoFile!.type,
       },
     };
 
