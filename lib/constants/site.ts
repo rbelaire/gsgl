@@ -9,6 +9,7 @@ export const siteConfig = {
     { label: "Services", href: "/services" },
     { label: "Equipment", href: "/catalog" },
     { label: "Fit Experience", href: "/fit-experience" },
+    { label: "Swing Review", href: "/swing-review" },
     { label: "Dashboard", href: "/dashboard" },
   ],
 };
